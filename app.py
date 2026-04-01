@@ -94,6 +94,37 @@ def add_movie(user_id):
 
     return redirect(url_for('get_movies', user_id=user_id))
 
+@app.route('/users/<int:user_id>/movies/<int:movie_id>/update', methods=['POST'])
+def update_movie(user_id, movie_id):
+    users = data_manager.get_users()
+    movies = data_manager.get_movies(user_id=user_id)
+    input_user = next((user for user in users if user.id == user_id), None)
+
+    if not input_user:
+        flash("User not found.")
+        return redirect(url_for('get_movies'))
+
+    input_movie = next((movie for movie in movies if movie.id == movie_id), None)
+
+    if not input_movie:
+        flash("Movie not found.")
+        return redirect(url_for('get_movies',user_id=user_id))
+
+    new_title = request.form.get('title')
+
+    if not new_title:
+        flash("Title cannot be empty.")
+        return redirect(url_for('get_movies', user_id=user_id))
+
+    try:
+        data_manager.update_movie(movie_id, new_title)
+        flash(f"Movie '{input_movie.title}' was updated successfully")
+
+    except ValueError as e:
+        flash(f"Error: {str(e)}")
+
+    return redirect(url_for('get_movies', user_id=user_id))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
