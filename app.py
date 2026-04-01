@@ -21,9 +21,9 @@ data_manager = DataManager()
 
 
 @app.route('/', methods=['GET'])
-def home():
+def index():
     users = data_manager.get_users()
-    return render_template("home.html", users=users)
+    return render_template("index.html", users=users)
 
 @app.route('/users', methods=['POST'])
 def add_user():
@@ -31,7 +31,7 @@ def add_user():
 
     if not username:
         flash("Username cannot be empty!")
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     try:
         data_manager.create_user(name=username)
         flash(f"User '{username}' was created successfully")
@@ -39,13 +39,13 @@ def add_user():
     except ValueError as e:
         flash(f"Error: {str(e)}")
 
-    return redirect(url_for('home'))
+    return redirect(url_for('index'))
 
 @app.route('/users/<int:user_id>/movies', methods=['GET'])
 def get_movies(user_id):
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
 
     movies = data_manager.get_movies(user_id=user_id)
 
@@ -55,7 +55,7 @@ def get_movies(user_id):
 def add_movie(user_id):
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
 
     title = request.form.get('title')
 
@@ -92,7 +92,7 @@ def add_movie(user_id):
 def update_movie(user_id, movie_id):
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
 
     input_movie = get_and_validate_movie(user_id, movie_id, data_manager)
 
@@ -120,7 +120,7 @@ def delete_movie(user_id, movie_id):
     input_user = get_and_validate_user(user_id, data_manager)
 
     if not input_user:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
 
     input_movie = get_and_validate_movie(user_id, movie_id, data_manager)
 
