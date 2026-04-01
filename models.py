@@ -1,6 +1,6 @@
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 db = SQLAlchemy()
@@ -51,16 +51,17 @@ class Movie(db.Model):
     release_year: Mapped[int] = mapped_column(Integer)
     cover_url: Mapped[str] = mapped_column(String, nullable=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
-    rating: Mapped[int] = mapped_column(Integer, nullable=True)
+    rating: Mapped[int] = mapped_column(Float, nullable=True)
 
     @validates('title')
     def validate_title(self, key, value):
         """Validates that the movie's title is not empty."""
         if not value:
             raise ValueError("Title of movie cannot be empty")
-        return value.strip()
+        return value if value else None
 
-    @validates('year')
+
+    @validates('release_year')
     def validate_release_year(self, key, value):
         """
         Validates and cleans the release year.
@@ -68,12 +69,13 @@ class Movie(db.Model):
         Converts string input to integer and ensures the year is not in the
         future.
         """
-        if value == '' or value is None:
+        if value is None:
             return None
+
         try:
             int_value = int(value)
         except ValueError:
-            raise ValueError("Release year must be a valid number")
+            raise ValueError(f"Release year must be a valid number 'YYYY'")
 
         if int_value > date.today().year:
             raise ValueError("Release year cannot be in the future")
@@ -85,21 +87,23 @@ class Movie(db.Model):
         """Validates that the cover URL starts with valid web protocols."""
         if value and not ((value.startswith('http://') or value.startswith('https://'))):
             raise ValueError("URL of cover url should start with http:// or https://")
-        return value.strip() if value else None
+        return value if value else None
 
     @validates('rating')
     def validate_rating(self, key, value):
         """Validates that the rating is not more than 10."""
-        if value == '' or value is None:
+        if value is None:
             return None
-        try:
-            int_value = int(value)
-        except ValueError:
-            raise ValueError("Invalid rating")
 
-        if not (1 <= int_value <= 10):
+        try:
+            float_value = float(value)
+        except ValueError:
+            raise ValueError("Invalid rating. Must be a number.")
+
+        if not (1 <= float_value <= 10):
             raise ValueError("Rating of movie should be from 1 to 10")
-        return int_value
+
+        return float_value
 
 
     def __repr__(self):
