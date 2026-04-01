@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from data_manager import DataManager
 from models import User, Movie, db
-from helpers import get_movie_with_api
+from helpers import get_movie_with_api, get_and_validate_user, get_and_validate_movie
 import os
 
 app = Flask(__name__)
@@ -20,7 +20,7 @@ with app.app_context():
 data_manager = DataManager()
 
 
-@app.route('/', methods='GET')
+@app.route('/', methods=['GET'])
 def home():
     users = data_manager.get_users()
     return render_template("home.html", users=users)
@@ -43,11 +43,8 @@ def add_user():
 
 @app.route('/users/<int:user_id>/movies', methods=['GET'])
 def get_movies(user_id):
-    users = data_manager.get_users()
-    input_user = next((user for user in users if user.id == user_id), None)
-
+    input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        flash("User is not found.")
         return redirect(url_for('home'))
 
     movies = data_manager.get_movies(user_id=user_id)
@@ -56,11 +53,8 @@ def get_movies(user_id):
 
 @app.route('/users/<int:user_id>/movies', methods=['POST'])
 def add_movie(user_id):
-    users = data_manager.get_users()
-    input_user = next((user for user in users if user.id == user_id), None)
-
+    input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        flash("User not found.")
         return redirect(url_for('home'))
 
     title = request.form.get('title')
@@ -96,18 +90,13 @@ def add_movie(user_id):
 
 @app.route('/users/<int:user_id>/movies/<int:movie_id>/update', methods=['POST'])
 def update_movie(user_id, movie_id):
-    users = data_manager.get_users()
-    movies = data_manager.get_movies(user_id=user_id)
-    input_user = next((user for user in users if user.id == user_id), None)
-
+    input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
-        flash("User not found.")
-        return redirect(url_for('get_movies'))
+        return redirect(url_for('home'))
 
-    input_movie = next((movie for movie in movies if movie.id == movie_id), None)
+    input_movie = get_and_validate_movie(user_id, movie_id, data_manager)
 
     if not input_movie:
-        flash("Movie not found.")
         return redirect(url_for('get_movies',user_id=user_id))
 
     new_title = request.form.get('title')
@@ -125,6 +114,26 @@ def update_movie(user_id, movie_id):
 
     return redirect(url_for('get_movies', user_id=user_id))
 
+
+@app.route('/users/<int:user_id>/movies/<int:movie_id>/delete', methods=['POST'])
+def delete_movie(user_id, movie_id):
+    input_user = get_and_validate_user(user_id, data_manager)
+
+    if not input_user:
+        return redirect(url_for('home'))
+
+    input_movie = get_and_validate_movie(user_id, movie_id, data_manager)
+
+    if not input_movie:
+        return redirect(url_for('get_movies', user_id=user_id))
+
+    try:
+        data_manager.delete_movie(movie_id)
+        flash(f"Movie '{input_movie.title}' was deleted successfully")
+    except ValueError as e:
+        flash(f"Error: {str(e)}")
+
+    return redirect(url_for('get_movies', user_id=user_id))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -50,7 +50,7 @@ class Movie(db.Model):
     director: Mapped[str] = mapped_column(String, nullable=True)
     release_year: Mapped[int] = mapped_column(Integer)
     cover_url: Mapped[str] = mapped_column(String, nullable=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.id'))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     rating: Mapped[int] = mapped_column(Float, nullable=True)
 
     @validates('title')
@@ -85,7 +85,7 @@ class Movie(db.Model):
     @validates('cover_url')
     def validate_cover_url(self, key, value):
         """Validates that the cover URL starts with valid web protocols."""
-        if value and not ((value.startswith('http://') or value.startswith('https://'))):
+        if not ((value.startswith('http://') or value.startswith('https://'))):
             raise ValueError("URL of cover url should start with http:// or https://")
         return value if value else None
 
