@@ -34,7 +34,7 @@ def add_user():
         return redirect(url_for('home'))
     try:
         data_manager.create_user(name=username)
-        flash(f"User '{username}' successfully created")
+        flash(f"User '{username}' was created successfully")
 
     except ValueError as e:
         flash(f"Error: {str(e)}")
@@ -47,12 +47,53 @@ def get_movies(user_id):
     input_user = next((user for user in users if user.id == user_id), None)
 
     if not input_user:
-        flash("User not found.")
+        flash("User is not found.")
         return redirect(url_for('home'))
 
     movies = data_manager.get_movies(user_id=user_id)
 
     return render_template("user_movies.html", user=input_user, movies=movies)
+
+@app.route('/users/<int:user_id>/movies', methods=['POST'])
+def add_movie(user_id):
+    users = data_manager.get_users()
+    input_user = next((user for user in users if user.id == user_id), None)
+
+    if not input_user:
+        flash("User not found.")
+        return redirect(url_for('home'))
+
+    title = request.form.get('title')
+
+    if not title:
+        flash("Title cannot be empty")
+        return redirect(url_for('get_movies', user_id=user_id))
+
+    try:
+        api_movie = get_movie_with_api(title)
+        if not api_movie:
+            flash(f"Movie '{title}' is not found in OMDb.")
+            return redirect(url_for('get_movies', user_id=user_id))
+
+        api_title, api_director, api_year, api_image, api_rating = api_movie
+
+        new_movie = Movie(
+            title=api_title,
+            director=api_director,
+            release_year=api_year,
+            cover_url=api_image,
+            user_id=user_id,
+            rating=api_rating
+        )
+
+        data_manager.add_movie(movie=new_movie)
+        flash(f"Movie '{api_title}' was created successfully")
+
+    except ValueError as e:
+        flash(f"Error: {str(e)}")
+
+    return redirect(url_for('get_movies', user_id=user_id))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
