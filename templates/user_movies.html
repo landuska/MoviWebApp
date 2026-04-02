@@ -23,20 +23,36 @@
         </form>
     </div>
 
+    <h3>Add Movie</h3>
+    <form method="POST" action="{{ url_for('add_movie', user_id=user.id) }}" class="d-flex gap-2 mb-5">
+        <input type="text" name="title" class="form-control" placeholder="Movie title" required>
+        <button type="submit" class="btn btn-success">Add</button>
+    </form>
+
     <ul class="list-group mb-4">
         {% for movie in movies %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <strong>{{ movie.title }}</strong>
+        <li class="list-group-item mb-3"> <!-- <- margin-bottom hinzugefügt -->
+            <div class="d-flex align-items-center gap-3">
+                {% if movie.cover_url %}
+                    <img src="{{ movie.cover_url }}" alt="{{ movie.title }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                {% endif %}
+                <div class="flex-grow-1">
+                    <h5 class="mb-1">{{ movie.title }}</h5>
+                    <p class="mb-1">Director: {{ movie.director or 'Unknown' }}</p>
+                    <p class="mb-1">Rating: {{ movie.rating or 'N/A' }}</p>
+                    <p class="mb-0">Year: {{ movie.release_year or 'Unknown' }}</p>
+                </div>
 
-            <div class="d-flex gap-2">
-                <form method="POST" action="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}" class="d-flex gap-2 mb-0">
-                    <input type="text" name="title" class="form-control form-control-sm" placeholder="New title" required>
-                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                </form>
+                <div class="d-flex flex-column gap-2">
+                    <form method="POST" action="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}" class="d-flex gap-1 mb-0">
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="New title" required>
+                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                    </form>
 
-                <form method="POST" action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}" style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
+                    <form method="POST" action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </div>
             </div>
         </li>
         {% else %}
@@ -45,11 +61,5 @@
     </ul>
 
     <hr>
-
-    <h3>Add Movie</h3>
-    <form method="POST" action="{{ url_for('add_movie', user_id=user.id) }}" class="d-flex gap-2">
-        <input type="text" name="title" class="form-control" placeholder="Movie title" required>
-        <button type="submit" class="btn btn-success">Add</button>
-    </form>
 </div>
 {% endblock %}
