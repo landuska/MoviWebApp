@@ -1,26 +1,36 @@
 {% extends "base.html" %}
+
 {% block content %}
-    <h1>Users</h1>
-    <div>
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            {% for msg in messages %}
-              <div class="flash-message">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+<div class="container mt-5">
+    <h1 class="mb-4">Users</h1>
 
-        <ul class="user-list">
-            {% for user in users %}
-            <li class="user-entry">
-                <a href="{{ url_for('get_movies', user_id=user.id) }}" class="btn">{{ user.name }}</a>
-            </li>
-            {% endfor %}
-        </ul>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-success" role="alert">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-        <form method="POST" action="{{ url_for('add_user') }}" >
-            <input type="text" name="username">
-            <input type="submit" value="Add">
-        </form>
-    </div>
+    <ul class="list-group mb-4">
+        {% for user in users %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('get_movies', user_id=user.id) }}" class="text-decoration-none">{{ user.name }}</a>
+            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline;"
+                  onsubmit="return confirm('Are you sure you want to delete this user?');">
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">No users found.</li>
+        {% endfor %}
+    </ul>
+
+    <form method="POST" action="{{ url_for('add_user') }}" class="d-flex gap-2">
+        <input type="text" name="username" class="form-control" placeholder="Username" required>
+        <button type="submit" class="btn btn-success">Add</button>
+    </form>
+</div>
 {% endblock %}
