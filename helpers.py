@@ -9,6 +9,18 @@ API_KEY = os.getenv('API_KEY')
 
 
 def clean_na(value):
+    """
+    Cleans string values from garbage and OMDb-specific missing data markers.
+
+    Converts empty strings and "N/A" values into a None object.
+
+    Args:
+        value (Any): The value received from the API to be cleaned.
+
+    Returns:
+        str: The cleaned string if the data is valid.
+        None: If the value is empty, equals "N/A", or is already None.
+    """
     if value is None:
         return None
 
@@ -41,13 +53,13 @@ def get_movie_with_api(t: str) -> tuple:
         response = requests.get(url_api, params=params)
     except requests.RequestException as e:
         print(f"Network error: {e}")
-        return []
+        return None
 
     data = response.json()
 
     if data["Response"] == "False":
         print(f"Movie '{t}' not found")
-        return []
+        return None
 
     title = clean_na(data.get("Title"))
     director = clean_na(data.get("Director"))
@@ -72,6 +84,19 @@ def get_movie_with_api(t: str) -> tuple:
     return title, director, year, image, rating
 
 def get_and_validate_user(user_id, data_manager):
+    """
+    Fetches a user from the database by their ID.
+
+    If the user is not found, it creates a Flask flash message with an error.
+
+    Args:
+        user_id (int): The unique identifier of the user.
+        data_manager (DataManager): The data manager object to interact with the DB.
+
+    Returns:
+        User: The found user object.
+        None: If a user with this ID is not registered.
+    """
     users = data_manager.get_users()
     input_user = next((user for user in users if user.id == user_id), None)
 
@@ -81,6 +106,21 @@ def get_and_validate_user(user_id, data_manager):
     return input_user
 
 def get_and_validate_movie(user_id, movie_id, data_manager):
+    """
+    Fetches  movie in the favorite list of a specific user.
+
+    If the movie is not found or does not belong to this user, it creates
+    a Flask flash message.
+
+    Args:
+        user_id (int): The unique identifier of the user.
+        movie_id (int): The unique identifier of the movie.
+        data_manager (DataManager): The data manager object to interact with the DB.
+
+    Returns:
+        Movie: The found movie object.
+        None: If the movie is not found in this user's movie list.
+    """
     movies = data_manager.get_movies(user_id=user_id)
     input_movie = next((movie for movie in movies if movie.id == movie_id), None)
 

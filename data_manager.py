@@ -22,9 +22,13 @@ class DataManager():
         if existing_user:
             raise ValueError(f"User with name '{name}' already exists.")
 
-        new_user = User(name=name)
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            new_user = User(name=name)
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def get_users(self) -> list[User]:
         """
@@ -56,8 +60,12 @@ class DataManager():
             movie (Movie): A fully formed Movie object containing title,
                            director, release_year, cover_url, and user_id.
         """
-        db.session.add(movie)
-        db.session.commit()
+        try:
+            db.session.add(movie)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def update_movie(self, movie_id: int, new_title: str) -> None:
         """
@@ -73,8 +81,12 @@ class DataManager():
         """
         movie = db.session.get(Movie, movie_id)
         if movie:
-            movie.title = new_title
-            db.session.commit()
+            try:
+                movie.title = new_title
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
         else:
             raise ValueError(f"Movie with id {movie_id} not found")
 
@@ -91,7 +103,35 @@ class DataManager():
         """
         movie = db.session.get(Movie, movie_id)
         if movie:
-            db.session.delete(movie)
-            db.session.commit()
+            try:
+                db.session.delete(movie)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
         else:
             raise ValueError(f"Movie with id {movie_id} not found")
+
+
+
+    def delete_user(self, user_id: int) -> None:
+        """
+        Deletes a user from the database.
+
+        Args:
+            user_id (int): The unique identifier (id) of the user to delete.
+
+        Raises:
+            ValueError: If a usere with the specified user_id is not found
+                        in the database.
+        """
+        user = db.session.get(User, user_id)
+        if user:
+            try:
+                db.session.delete(user)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+        else:
+            raise ValueError(f"User not found")

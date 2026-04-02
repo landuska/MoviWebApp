@@ -2,6 +2,14 @@
 {% block content %}
     <h1>Users</h1>
     <div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="flash-message">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <ul class="user-list">
             {% for user in users %}
             <li class="user-entry">

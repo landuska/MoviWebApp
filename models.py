@@ -23,7 +23,7 @@ class User(db.Model):
         """Validates that the user's name is not empty."""
         if not value:
             raise ValueError("Name cannot be empty")
-        return value.strip()
+        return value
 
     def __repr__(self):
         return f"User (id={self.id}, name={self.name})"
@@ -58,7 +58,7 @@ class Movie(db.Model):
         """Validates that the movie's title is not empty."""
         if not value:
             raise ValueError("Title of movie cannot be empty")
-        return value if value else None
+        return value
 
 
     @validates('release_year')
@@ -84,7 +84,10 @@ class Movie(db.Model):
 
     @validates('cover_url')
     def validate_cover_url(self, key, value):
-        """Validates that the cover URL starts with valid web protocols."""
+        """Validates that the cover URL is not empty and starts with valid web protocols."""
+        if not value:
+            return None
+
         if not ((value.startswith('http://') or value.startswith('https://'))):
             raise ValueError("URL of cover url should start with http:// or https://")
         return value if value else None

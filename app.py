@@ -3,6 +3,7 @@ from data_manager import DataManager
 from models import User, Movie, db
 from helpers import get_movie_with_api, get_and_validate_user, get_and_validate_movie
 import os
+from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
@@ -22,27 +23,46 @@ data_manager = DataManager()
 
 @app.route('/', methods=['GET'])
 def index():
+    """
+    Renders the home page with a list of all registered users.
+
+    Returns:
+        Rendered HTML template 'index.html' with users data.
+    """
     users = data_manager.get_users()
     return render_template("index.html", users=users)
 
 @app.route('/users', methods=['POST'])
 def add_user():
-    username = request.form.get('username')
+    """
+    Creates a new user via a POST form.
 
-    if not username:
-        flash("Username cannot be empty!")
-        return redirect(url_for('index'))
+    Redirects back to the index page after execution.
+    """
+    username = request.form.get('username', '').strip()
     try:
         data_manager.create_user(name=username)
         flash(f"User '{username}' was created successfully")
 
     except ValueError as e:
-        flash(f"Error: {str(e)}")
+        flash(f"error: {str(e)}")
+
+    except SQLAlchemyError as e:
+        flash(f"Database error: {str(e)}")
 
     return redirect(url_for('index'))
 
 @app.route('/users/<int:user_id>/movies', methods=['GET'])
 def get_movies(user_id):
+    """
+    Fetches and displays the list of favorite movies for a specific user.
+
+    Args:
+        user_id (int): The ID of the user whose movies to retrieve.
+
+    Returns:
+        Rendered HTML template 'user_movies.html' with user and movie data.
+    """
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
         return redirect(url_for('index'))
@@ -53,15 +73,20 @@ def get_movies(user_id):
 
 @app.route('/users/<int:user_id>/movies', methods=['POST'])
 def add_movie(user_id):
+    """
+    Fetches movie data from OMDb API and adds it to the user's list.
+
+    Args:
+        user_id (int): The ID of the user adding the movie.
+
+    Returns:
+        Redirects to the user's movie list page.
+    """
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
         return redirect(url_for('index'))
 
     title = request.form.get('title')
-
-    if not title:
-        flash("Title cannot be empty")
-        return redirect(url_for('get_movies', user_id=user_id))
 
     try:
         api_movie = get_movie_with_api(title)
@@ -84,12 +109,25 @@ def add_movie(user_id):
         flash(f"Movie '{api_title}' was created successfully")
 
     except ValueError as e:
-        flash(f"Error: {str(e)}")
+        flash(f"error: {str(e)}")
+
+    except SQLAlchemyError as e:
+        flash(f"Database error: {str(e)}")
 
     return redirect(url_for('get_movies', user_id=user_id))
 
 @app.route('/users/<int:user_id>/movies/<int:movie_id>/update', methods=['POST'])
 def update_movie(user_id, movie_id):
+    """
+    Updates the title of a specific movie in the user's list.
+
+    Args:
+        user_id (int): The ID of the user who owns the movie.
+        movie_id (int): The ID of the movie to be updated.
+
+    Returns:
+        Redirects to the user's movie list page.
+    """
     input_user = get_and_validate_user(user_id, data_manager)
     if not input_user:
         return redirect(url_for('index'))
@@ -110,13 +148,26 @@ def update_movie(user_id, movie_id):
         flash(f"Movie '{input_movie.title}' was updated successfully")
 
     except ValueError as e:
-        flash(f"Error: {str(e)}")
+        flash(f"error: {str(e)}")
+
+    except SQLAlchemyError as e:
+        flash(f"Database error: {str(e)}")
 
     return redirect(url_for('get_movies', user_id=user_id))
 
 
 @app.route('/users/<int:user_id>/movies/<int:movie_id>/delete', methods=['POST'])
 def delete_movie(user_id, movie_id):
+    """
+    Removes a movie from the user's list of favorites.
+
+    Args:
+        user_id (int): The ID of the user who owns the movie.
+        movie_id (int): The ID of the movie to be deleted.
+
+    Returns:
+        Redirects to the user's movie list page.
+    """
     input_user = get_and_validate_user(user_id, data_manager)
 
     if not input_user:
@@ -127,13 +178,56 @@ def delete_movie(user_id, movie_id):
     if not input_movie:
         return redirect(url_for('get_movies', user_id=user_id))
 
+
     try:
         data_manager.delete_movie(movie_id)
         flash(f"Movie '{input_movie.title}' was deleted successfully")
     except ValueError as e:
-        flash(f"Error: {str(e)}")
+        flash(f"error: {str(e)}")
+
+    except SQLAlchemyError as e:
+        flash(f"Database error: {str(e)}")
 
     return redirect(url_for('get_movies', user_id=user_id))
+
+
+@app.route('/users/<int:user_id>/movies/delete', methods=['POST'])
+def delete_user(user_id):
+    """
+    Removes a user from the Database.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Returns:
+        Redirects to the main page.
+    """
+    input_user = get_and_validate_user(user_id, data_manager)
+
+    if not input_user:
+        return redirect(url_for('index'))
+
+    try:
+        data_manager.delete_user(user_id)
+        flash(f"Movie '{input_user.name}' was deleted successfully")
+    except ValueError as e:
+        flash(f"error: {str(e)}")
+
+    except SQLAlchemyError as e:
+        flash(f"Database error: {str(e)}")
+
+    return redirect(url_for('index'))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handles HTTP 404 errors and displays a custom error page."""
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internet_server_error(e):
+    """Handles HTTP 500 errors and displays a custom error page."""
+    return render_template('500.html'), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
