@@ -3,12 +3,14 @@ import os
 from dotenv import load_dotenv
 import re
 from flask import flash
+from typing import Any
+from models import User, Movie
 
 load_dotenv(dotenv_path="config/.env")
 API_KEY = os.getenv('API_KEY')
 
 
-def clean_na(value):
+def clean_na(value: Any) -> str | None:
     """
     Cleans string values from garbage and OMDb-specific missing data markers.
 
@@ -30,7 +32,7 @@ def clean_na(value):
 
     return str_value
 
-def get_movie_with_api(t: str) -> tuple:
+def get_movie_with_api(t: str) -> tuple[str | None, str | None, str | None, str | None, float | None] | None:
     """
     Fetches movie details from the OMDb API based on a title.
 
@@ -83,7 +85,7 @@ def get_movie_with_api(t: str) -> tuple:
 
     return title, director, year, image, rating
 
-def get_and_validate_user(user_id, data_manager):
+def get_and_validate_user(user_id: int, data_manager: Any) -> User | None:
     """
     Fetches a user from the database by their ID.
 
@@ -105,7 +107,7 @@ def get_and_validate_user(user_id, data_manager):
 
     return input_user
 
-def get_and_validate_movie(user_id, movie_id, data_manager):
+def get_and_validate_movie(user_id: int, movie_id: int, data_manager: Any) -> Movie | None:
     """
     Fetches  movie in the favorite list of a specific user.
 

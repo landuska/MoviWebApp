@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, Response, url_for, flash
 from data_manager import DataManager
 from models import User, Movie, db
 from helpers import get_movie_with_api, get_and_validate_user, get_and_validate_movie
@@ -22,7 +22,7 @@ data_manager = DataManager()
 
 
 @app.route('/', methods=['GET'])
-def index():
+def index()-> str:
     """
     Renders the home page with a list of all registered users.
 
@@ -33,7 +33,7 @@ def index():
     return render_template("index.html", users=users)
 
 @app.route('/users', methods=['POST'])
-def add_user():
+def add_user()-> Response:
     """
     Creates a new user via a POST form.
 
@@ -56,7 +56,7 @@ def add_user():
     return redirect(url_for('index'))
 
 @app.route('/users/<int:user_id>/movies', methods=['GET'])
-def get_movies(user_id):
+def get_movies(user_id: int) -> str | Response:
     """
     Fetches and displays the list of favorite movies for a specific user.
 
@@ -75,7 +75,7 @@ def get_movies(user_id):
     return render_template("user_movies.html", user=input_user, movies=movies)
 
 @app.route('/users/<int:user_id>/movies', methods=['POST'])
-def add_movie(user_id):
+def add_movie(user_id: int)-> Response:
     """
     Fetches movie data from OMDb API and adds it to the user's list.
 
@@ -123,7 +123,7 @@ def add_movie(user_id):
     return redirect(url_for('get_movies', user_id=user_id))
 
 @app.route('/users/<int:user_id>/movies/<int:movie_id>/update', methods=['POST'])
-def update_movie(user_id, movie_id):
+def update_movie(user_id: int, movie_id: int)-> Response:
     """
     Updates the title of a specific movie in the user's list.
 
@@ -166,7 +166,7 @@ def update_movie(user_id, movie_id):
 
 
 @app.route('/users/<int:user_id>/movies/<int:movie_id>/delete', methods=['POST'])
-def delete_movie(user_id, movie_id):
+def delete_movie(user_id: int, movie_id: int)-> Response:
     """
     Removes a movie from the user's list of favorites.
 
@@ -204,7 +204,7 @@ def delete_movie(user_id, movie_id):
 
 
 @app.route('/users/<int:user_id>/movies/delete', methods=['POST'])
-def delete_user(user_id):
+def delete_user(user_id: int)-> Response:
     """
     Removes a user from the Database.
 
@@ -221,7 +221,7 @@ def delete_user(user_id):
 
     try:
         data_manager.delete_user(user_id)
-        flash(f"Movie '{input_user.name}' was deleted successfully")
+        flash(f"User '{input_user.name}' was deleted successfully")
     except ValueError as e:
         flash(str(e))
 
