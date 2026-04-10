@@ -45,10 +45,13 @@ def add_user():
         flash(f"User '{username}' was created successfully")
 
     except ValueError as e:
-        flash(f"error: {str(e)}")
+        flash(str(e))
 
     except SQLAlchemyError as e:
         flash(f"Database error: {str(e)}")
+
+    except Exception:
+        flash("Some error occurred. Please try again.")
 
     return redirect(url_for('index'))
 
@@ -109,10 +112,13 @@ def add_movie(user_id):
         flash(f"Movie '{api_title}' was created successfully")
 
     except ValueError as e:
-        flash(f"error: {str(e)}")
+        flash(str(e))
 
     except SQLAlchemyError as e:
         flash(f"Database error: {str(e)}")
+
+    except Exception:
+        flash("Some error occurred. Please try again.")
 
     return redirect(url_for('get_movies', user_id=user_id))
 
@@ -148,10 +154,13 @@ def update_movie(user_id, movie_id):
         flash(f"Movie '{input_movie.title}' was updated successfully")
 
     except ValueError as e:
-        flash(f"error: {str(e)}")
+        flash(str(e))
 
     except SQLAlchemyError as e:
         flash(f"Database error: {str(e)}")
+
+    except Exception:
+        flash("Some error occurred. Please try again.")
 
     return redirect(url_for('get_movies', user_id=user_id))
 
@@ -183,10 +192,13 @@ def delete_movie(user_id, movie_id):
         data_manager.delete_movie(movie_id)
         flash(f"Movie '{input_movie.title}' was deleted successfully")
     except ValueError as e:
-        flash(f"error: {str(e)}")
+        flash(str(e))
 
     except SQLAlchemyError as e:
         flash(f"Database error: {str(e)}")
+
+    except Exception:
+        flash("Some error occurred. Please try again.")
 
     return redirect(url_for('get_movies', user_id=user_id))
 
@@ -211,10 +223,13 @@ def delete_user(user_id):
         data_manager.delete_user(user_id)
         flash(f"Movie '{input_user.name}' was deleted successfully")
     except ValueError as e:
-        flash(f"error: {str(e)}")
+        flash(str(e))
 
     except SQLAlchemyError as e:
         flash(f"Database error: {str(e)}")
+
+    except Exception:
+        flash("Some error occurred. Please try again.")
 
     return redirect(url_for('index'))
 

@@ -1,6 +1,6 @@
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, Float, ForeignKey
+from sqlalchemy import Integer, String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 db = SQLAlchemy()
@@ -42,16 +42,20 @@ class Movie(db.Model):
         release_year (int): The release year of the movie. Cannot be in the future.
         cover_url (str, optional): URL to the movie's cover image.
         user_id (int): Foreign key referencing the user.
-        rating (int): Rating of the movie. Cannot be in the future.
+        rating (float): Rating of the movie. Cannot be in the future.
     """
     __tablename__ = 'movies'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String, unique=True)
+    title: Mapped[str] = mapped_column(String)
     director: Mapped[str] = mapped_column(String, nullable=True)
     release_year: Mapped[int] = mapped_column(Integer)
     cover_url: Mapped[str] = mapped_column(String, nullable=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
-    rating: Mapped[int] = mapped_column(Float, nullable=True)
+    rating: Mapped[float] = mapped_column(Float, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('title', 'user_id', name='title_user_uc'),
+    )
 
     @validates('title')
     def validate_title(self, key, value):

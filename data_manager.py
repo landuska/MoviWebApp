@@ -1,3 +1,5 @@
+from sqlalchemy.exc import IntegrityError
+
 from models import User, Movie, db
 
 
@@ -63,6 +65,8 @@ class DataManager():
         try:
             db.session.add(movie)
             db.session.commit()
+        except IntegrityError:
+            raise ValueError(f"Movie {movie} was already added to the user's favorites.")
         except Exception:
             db.session.rollback()
             raise
